@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório de Ocorrências — CGR Canaã Telecom</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #2563a8;
+      --accent: #e84545;
+      --accent2: #f59e0b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      padding: 2.5rem 2rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: 40%;
+      width: 320px; height: 320px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .header-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 0.25rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
+    header p { font-size: 0.95rem; opacity: 0.85; }
+    .header-meta {
+      display: flex; gap: 2rem; margin-top: 1.5rem; flex-wrap: wrap;
+    }
+    .header-meta-item { font-size: 0.85rem; opacity: 0.9; }
+    .header-meta-item strong { display: block; font-size: 1.4rem; font-weight: 700; }
+
+    /* NAV */
+    nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; gap: 0; overflow-x: auto;
+    }
+    .nav-inner a {
+      display: block; padding: 1rem 1.4rem;
+      text-decoration: none; color: var(--text-muted);
+      font-size: 0.85rem; font-weight: 500;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-inner a:hover, .nav-inner a.active {
+      color: var(--primary-light);
+      border-bottom-color: var(--primary-light);
+    }
+
+    /* MAIN */
+    main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* SECTION */
+    section { margin-bottom: 3rem; }
+    .section-title {
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-title .icon { font-size: 1.1rem; }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .kpi-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--primary-light);
+      transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-card.danger { border-left-color: var(--danger); }
+    .kpi-card.warning { border-left-color: var(--warning); }
+    .kpi-card.success { border-left-color: var(--success); }
+    .kpi-card.info { border-left-color: var(--info); }
+    .kpi-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .kpi-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* CHARTS GRID */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+    .chart-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .chart-card.wide { grid-column: 1 / -1; }
+    .chart-title {
+      font-size: 0.95rem; font-weight: 700; color: var(--primary);
+      margin-bottom: 0.4rem;
+    }
+    .chart-desc {
+      font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .chart-wrap { position: relative; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    thead { background: var(--primary); color: #fff; }
+    thead th { padding: 0.85rem 1rem; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td { padding: 0.75rem 1rem; font-size: 0.82rem; vertical-align: top; }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.65rem;
+      border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-danger { background: #fee2e2; color: #b91c1c; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem;
+    }
+    .filter-btn {
+      padding: 0.4rem 1rem; border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--card); color: var(--text-muted);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--primary-light); color: #fff; border-color: var(--primary-light);
+    }
+
+    /* TIMELINE */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0.6rem; top: 0; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .tl-item {
+      position: relative; margin-bottom: 1.5rem;
+      background: var(--card); border-radius: 10px;
+      padding: 1rem 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tl-item::before {
+      content: ''; position: absolute;
+      left: -1.85rem; top: 1.1rem;
+      width: 12px; height: 12px;
+      border-radius: 50%; background: var(--primary-light);
+      border: 2px solid var(--card);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+    .tl-item.critical::before { background: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+    .tl-item.resolved::before { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+    .tl-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap; }
+    .tl-title { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+    .tl-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    .tl-body { margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-muted); }
+    .tl-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+    /* INSIGHT BOX */
+    .insight-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .insight-box h4 { color: var(--primary); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .insight-box p { font-size: 0.83rem; color: #1e40af; line-height: 1.6; }
+    .insight-box ul { font-size: 0.83rem; color: #1e40af; padding-left: 1.25rem; line-height: 1.8; }
+
+    /* FOOTER */
+    footer {
+      background: var(--primary); color: rgba(255,255,255,0.7);
+      text-align: center; padding: 1.5rem;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.4rem; }
+      .kpi-value { font-size: 1.5rem; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-badge">CGR — Central de Gerenciamento de Rede</div>
+    <h1>Relatório de Ocorrências</h1>
+    <p>Canaã Telecom · Período: 02/02/2026 a 27/02/2026</p>
+    <div class="header-meta">
+      <div class="header-meta-item"><strong>21</strong> Ocorrências</div>
+      <div class="header-meta-item"><strong>477</strong> Clientes impactados</div>
+      <div class="header-meta-item"><strong>26</strong> dias monitorados</div>
+      <div class="header-meta-item"><strong>90,5%</strong> Taxa de resolução</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#resumo" class="active">Resumo</a>
+    <a href="#graficos">Gráficos</a>
+    <a href="#timeline">Linha do Tempo</a>
+    <a href="#tabela">Tabela Detalhada</a>
+    <a href="#insights">Análise & Insights</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- RESUMO -->
+  <section id="resumo">
+    <div class="section-title"><span class="icon">📊</span> Indicadores Gerais</div>
+    <div class="kpi-grid">
+      <div class="kpi-card danger">
+        <div class="kpi-label">Total de Ocorrências</div>
+        <div class="kpi-value">21</div>
+        <div class="kpi-sub">Fev/2026</div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-label">Clientes Impactados</div>
+        <div class="kpi-value">477+</div>
+        <div class="kpi-sub">Clientes afetados</div>
+      </div>
+      <div class="kpi-card warning">
+        <div class="kpi-label">Maior Incidente</div>
+        <div class="kpi-value">300</div>
+        <div class="kpi-sub">Feira dos Goianos (10/02)</div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-label">Tempo Médio de Resolução</div>
+        <div class="kpi-value">7,2h</div>
+        <div class="kpi-sub">Média dos incidentes</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">Resolvidos</div>
+        <div class="kpi-value">19</div>
+        <div class="kpi-sub">de 21 ocorrências</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Rompimentos de Cabo</div>
+        <div class="kpi-value">5</div>
+        <div class="kpi-sub">Tipo mais crítico</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Manut. Programadas</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-sub">Com aviso prévio</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Região Mais Afetada</div>
+        <div class="kpi-value" style="font-size:1.1rem">Águas Claras</div>
+        <div class="kpi-sub">9 ocorrências</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRÁFICOS -->
+  <section id="graficos">
+    <div class="section-title"><span class="icon">📈</span> Gráficos e Visualizações</div>
+
+    <div class="charts-grid">
+
+      <!-- Ocorrências por Tipo -->
+      <div class="chart-card">
+        <div class="chart-title">Ocorrências por Tipo</div>
+        <div class="chart-desc">Distribuição das ocorrências registradas no período por categoria de falha. Os rompimentos de cabo e falhas de sinal (LOS/OFF) representam a maior parte dos incidentes.</div>
+        <div class="chart-wrap"><canvas id="chartTipo" height="260"></canvas></div>
+      </div>
+
+      <!-- Clientes Impactados por Ocorrência -->
+      <div class="chart-card">
+        <div class="chart-title">Clientes Impactados por Ocorrência</div>
+        <div class="chart-desc">Comparativo do número de clientes afetados em cada incidente com impacto quantificado. O rompimento da Feira dos Goianos foi o mais crítico, com 300 clientes fora.</div>
+        <div class="chart-wrap"><canvas id="chartImpacto" height="260"></canvas></div>
+      </div>
+
+      <!-- Ocorrências por Região -->
+      <div class="chart-card">
+        <div class="chart-title">Ocorrências por Região</div>
+        <div class="chart-desc">Distribuição geográfica das ocorrências. Águas Claras e Taguatinga concentram a maioria dos incidentes, indicando necessidade de atenção especial nestas regiões.</div>
+        <div class="chart-wrap"><canvas id="chartRegiao" height="260"></canvas></div>
+      </div>
+
+      <!-- Tempo de Resolução -->
+      <div class="chart-card">
+        <div class="chart-title">Tempo de Resolução por Incidente (horas)</div>
+        <div class="chart-desc">Duração em horas de cada ocorrência com tempo registrado. Incidentes com rompimento de cabo tendem a ter maior tempo de resolução, especialmente quando envolvem acesso a condomínios.</div>
+        <div class="chart-wrap"><canvas id="chartTempo" height="260"></canvas></div>
+      </div>
+
+      <!-- Ocorrências por Dia -->
+      <div class="chart-card wide">
+        <div class="chart-title">Ocorrências por Dia do Período</div>
+        <div class="chart-desc">Evolução diária das ocorrências ao longo do mês de fevereiro de 2026. O dia 10/02 concentrou o maior número de incidentes simultâneos, incluindo o rompimento massivo da Feira dos Goianos com 300 clientes afetados.</div>
+        <div class="chart-wrap"><canvas id="chartDia" height="160"></canvas></div>
+      </div>
+
+      <!-- Status das Ocorrências -->
+      <div class="chart-card">
+        <div class="chart-title">Status das Ocorrências</div>
+        <div class="chart-desc">Situação final de cada ocorrência registrada. A maioria foi resolvida, com alguns casos de resolução parcial e serviços externos apenas monitorados.</div>
+        <div class="chart-wrap"><canvas id="chartStatus" height="260"></canvas></div>
+      </div>
+
+      <!-- Causa Raiz (RFO) -->
+      <div class="chart-card">
+        <div class="chart-title">Causa Raiz das Falhas (RFO)</div>
+        <div class="chart-desc">Principais causas identificadas nos registros. Rompimentos físicos (por cabos cortados, fogo em postes, caminhões) são a causa mais frequente e impactante.</div>
+        <div class="chart-wrap"><canvas id="chartRFO" height="260"></canvas></div>
+      </div>
+
+      <!-- Clientes por Região -->
+      <div class="chart-card wide">
+        <div class="chart-title">Total de Clientes Impactados por Região</div>
+        <div class="chart-desc">Somatório de clientes afetados agrupados por região geográfica. Taguatinga lidera em volume de clientes impactados, principalmente devido ao rompimento massivo da Feira dos Goianos (300 clientes).</div>
+        <div class="chart-wrap"><canvas id="chartClientesRegiao" height="140"></canvas></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section id="timeline">
+    <div class="section-title"><span class="icon">🕐</span> Linha do Tempo das Ocorrências</div>
+    <div class="timeline" id="timelineContainer"></div>
+  </section>
+
+  <!-- TABELA -->
+  <section id="tabela">
+    <div class="section-title"><span class="icon">📋</span> Tabela Detalhada de Ocorrências</div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="Rompimento de Cabo">Rompimento</button>
+      <button class="filter-btn" data-filter="Falha de Sinal (LOS)">LOS/OFF</button>
+      <button class="filter-btn" data-filter="Manutenção Programada">Manutenção</button>
+      <button class="filter-btn" data-filter="Vandalismo / Roubo">Vandalismo</button>
+      <button class="filter-btn" data-filter="Instabilidade de Serviço Externo">Externo</button>
+    </div>
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Data / Hora</th>
+            <th>Ocorrência</th>
+            <th>Região</th>
+            <th>Tipo</th>
+            <th>Impacto</th>
+            <th>Causa (RFO)</th>
+            <th>Resolução</th>
+            <th>Duração</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INSIGHTS -->
+  <section id="insights">
+    <div class="section-title"><span class="icon">💡</span> Análise e Insights</div>
+
+    <div class="insight-box">
+      <h4>🔴 Dia Crítico: 10 de Fevereiro de 2026</h4>
+      <p>O dia 10/02 concentrou o maior número de incidentes simultâneos do período, com pelo menos 5 ocorrências ativas ao mesmo tempo. O rompimento da Feira dos Goianos (poste pegou fogo) afetou 300 clientes e foi o maior incidente do mês. Simultaneamente, ocorreram rompimentos em TGN-135/134, Viviane Rinaldi, Residencial Vanessa e o POP de Vicente Pires estava em manutenção programada.</p>
+    </div>
+
+    <div class="insight-box">
+      <h4>📍 Concentração Geográfica de Falhas</h4>
+      <ul>
+        <li><strong>Águas Claras:</strong> 9 ocorrências — maior frequência de incidentes, incluindo Figueiras Residence (77 clientes), Viviane Rinaldi (26 clientes) e Vereda das Águas.</li>
+        <li><strong>Taguatinga:</strong> 7 ocorrências — maior impacto em clientes (329+), puxado pelo rompimento massivo da Feira dos Goianos (300 clientes).</li>
+        <li><strong>Vicente Pires:</strong> 3 ocorrências — incluindo corte de cabo no Bálsamo 20 e manutenção do POP.</li>
+      </ul>
+    </div>
+
+    <div class="insight-box">
+      <h4>⚠️ Principais Causas de Falha</h4>
+      <ul>
+        <li><strong>Rompimentos físicos externos (5 casos):</strong> Poste pegou fogo, caminhão rompeu cabo, cabo cortado — causas externas que demandam resposta rápida de campo.</li>
+        <li><strong>Vandalismo (1 caso):</strong> Roubo da subida lateral do poste no Residencial Beethoven — impacto em 16 clientes com tempo de resolução de mais de 12 horas.</li>
+        <li><strong>Falhas de sinal sem causa identificada (7 casos):</strong> RFO não informado em vários incidentes, dificultando análise de recorrência.</li>
+      </ul>
+    </div>
+
+    <div class="insight-box">
+      <h4>⏱️ Tempo de Resolução</h4>
+      <ul>
+        <li><strong>Mais rápido:</strong> Manutenção POP Vicente Pires (61 min) e Manutenção Mirante São Francisco (60 min).</li>
+        <li><strong>Mais lento:</strong> TGN-135/134 (33,4 horas) — chuva atrasou o reparo. Rompimento Viviane Rinaldi (21,7 horas) — portaria impediu acesso durante almoço.</li>
+        <li><strong>Média geral:</strong> ~7,2 horas por incidente com tempo registrado.</li>
+      </ul>
+    </div>
+
+    <div class="insight-box">
+      <h4>✅ Recomendações</h4>
+      <ul>
+        <li>Implementar protocolo de acesso emergencial a condomínios para evitar atrasos como os ocorridos no Beethoven e Viviane Rinaldi.</li>
+        <li>Aumentar monitoramento preventivo em Águas Claras e Taguatinga, regiões com maior frequência de incidentes.</li>
+        <li>Registrar sempre o RFO (causa raiz) nos acionamentos para melhorar a análise de recorrência.</li>
+        <li>Avaliar proteção adicional nos postes da região da Feira dos Goianos, dado o histórico de rompimentos.</li>
+        <li>Criar plano de contingência para incidentes massivos (300+ clientes) com comunicação proativa.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Relatório gerado automaticamente com base nas conversas do grupo CGR · Canaã Telecom · Fevereiro de 2026
+</footer>
+
+<script>
+// ===== DATA =====
+const incidents = [
+  { id:1, titulo:"Manutenção Emergencial - Res. Palmeiras", data:"02/02/2026", hora_det:"15:36", hora_sol:"16:28", duracao:52, tipo:"Manutenção Emergencial", local:"Res. Palmeiras", regiao:"Não informada", impacto:"N/I", rfo:"Manutenção emergencial", status:"Parcial", os:"—" },
+  { id:2, titulo:"Caixas LOS - Cond. Eliene Fleury", data:"04/02/2026", hora_det:"12:08", hora_sol:"15:02", duracao:185, tipo:"Falha de Sinal (LOS)", local:"Cond. Eliene Fleury", regiao:"Águas Claras", impacto:17, rfo:"Não informado", status:"Resolvido", os:"—" },
+  { id:3, titulo:"Queda de Energia - Prédio VP", data:"04/02/2026", hora_det:"19:18", hora_sol:"20:21", duracao:63, tipo:"Falta de Energia", local:"Prédio - Vicente Pires", regiao:"Vicente Pires", impacto:"N/I", rfo:"Falta de energia na quadra", status:"Resolvido", os:"—" },
+  { id:4, titulo:"Roubo de Cabos - Res. Beethoven", data:"06/02/2026", hora_det:"22:05", hora_sol:"07/02 10:16", duracao:731, tipo:"Vandalismo / Roubo", local:"Res. Beethoven", regiao:"Taguatinga", impacto:16, rfo:"Roubo da subida lateral + corte de cabos", status:"Resolvido", os:"505592" },
+  { id:5, titulo:"Caixa LOS - Alzira Zacarias", data:"06/02/2026", hora_det:"22:15", hora_sol:"07/02 10:16", duracao:721, tipo:"Falha de Sinal (LOS)", local:"Alzira Zacarias", regiao:"Taguatinga", impacto:3, rfo:"Não informado", status:"Resolvido", os:"—" },
+  { id:6, titulo:"Instabilidade Sistema Bancário", data:"07/02/2026", hora_det:"12:27", hora_sol:"N/I", duracao:null, tipo:"Instabilidade de Serviço Externo", local:"Geral", regiao:"N/A", impacto:"N/I", rfo:"Causa externa", status:"Monitorado", os:"—" },
+  { id:7, titulo:"Caixa LOS - Spazio Duo", data:"09/02/2026", hora_det:"10:32", hora_sol:"11:46", duracao:74, tipo:"Falha de Sinal (LOS)", local:"Spazio Duo", regiao:"Taguatinga", impacto:3, rfo:"Não informado", status:"Resolvido", os:"505964" },
+  { id:8, titulo:"Rompimento Massivo - Feira dos Goianos", data:"10/02/2026", hora_det:"05:11", hora_sol:"12:31", duracao:533, tipo:"Rompimento de Cabo", local:"Feira dos Goianos", regiao:"Taguatinga", impacto:300, rfo:"Poste pegou fogo", status:"Resolvido*", os:"506316" },
+  { id:9, titulo:"Rompimento - TGN-135/134", data:"10/02/2026", hora_det:"07:09", hora_sol:"11/02 16:36", duracao:2007, tipo:"Rompimento de Cabo", local:"TGN-135/134", regiao:"Taguatinga", impacto:10, rfo:"Chuva atrasou reparo", status:"Resolvido", os:"—" },
+  { id:10, titulo:"Caixas OFF - Viviane Rinaldi", data:"10/02/2026", hora_det:"17:20", hora_sol:"11/02 15:01", duracao:1301, tipo:"Rompimento de Cabo", local:"Viviane Rinaldi", regiao:"Águas Claras", impacto:26, rfo:"Rompimento de cabo (4 rompimentos)", status:"Resolvido", os:"—" },
+  { id:11, titulo:"Caixa OFF - Res. Vanessa", data:"10/02/2026", hora_det:"17:24", hora_sol:"11/02 11:16", duracao:1154, tipo:"Falha de Sinal (OFF)", local:"Res. Vanessa", regiao:"Águas Claras", impacto:3, rfo:"Não informado", status:"Resolvido", os:"—" },
+  { id:12, titulo:"Manutenção Programada - POP VP", data:"10/02/2026", hora_det:"04:56", hora_sol:"05:57", duracao:61, tipo:"Manutenção Programada", local:"POP Vicente Pires", regiao:"Vicente Pires", impacto:0, rfo:"Manutenção programada", status:"Concluído", os:"—" },
+  { id:13, titulo:"Instabilidade Instagram", data:"12/02/2026", hora_det:"08:34", hora_sol:"N/I", duracao:null, tipo:"Instabilidade de Serviço Externo", local:"Geral", regiao:"N/A", impacto:"N/I", rfo:"Causa externa (Instagram)", status:"Monitorado", os:"—" },
+  { id:14, titulo:"Cabo Cortado - Res. Bálsamo 20", data:"12/02/2026", hora_det:"09:09", hora_sol:"15:26", duracao:377, tipo:"Corte de Cabo", local:"Res. Bálsamo 20", regiao:"Vicente Pires", impacto:1, rfo:"Cabo cortado no pé da alça", status:"Resolvido*", os:"507286" },
+  { id:15, titulo:"Caixas LOS - Mirante São Francisco", data:"13/02/2026", hora_det:"21:46", hora_sol:"14/02 08:00", duracao:733, tipo:"Falha de Sinal (LOS)", local:"Mirante São Francisco", regiao:"Águas Claras", impacto:13, rfo:"Não informado", status:"Resolvido", os:"508028" },
+  { id:16, titulo:"Rompimento por Caminhão - Vereda das Águas", data:"16/02/2026", hora_det:"12:29", hora_sol:"16:41", duracao:266, tipo:"Rompimento de Cabo", local:"Vereda das Águas", regiao:"Águas Claras", impacto:"N/I", rfo:"Caminhão rompeu o cabo", status:"Resolvido", os:"508304" },
+  { id:17, titulo:"Caixas LOS - Figueiras Residence & Mall", data:"17/02/2026", hora_det:"21:29", hora_sol:"18/02 09:04", duracao:695, tipo:"Falha de Sinal (LOS)", local:"Figueiras Residence & Mall", regiao:"Águas Claras", impacto:77, rfo:"Queda de energia / ressincronização", status:"Resolvido", os:"508718" },
+  { id:18, titulo:"Caixas LOS - Edifício Macaúba", data:"18/02/2026", hora_det:"16:58", hora_sol:"19/02 11:24", duracao:1106, tipo:"Falha de Sinal (LOS)", local:"Edifício Macaúba", regiao:"Águas Claras", impacto:"N/I", rfo:"Não informado", status:"Resolvido", os:"509177" },
+  { id:19, titulo:"Manutenção Programada - AC-CA011/012", data:"25/02/2026", hora_det:"08:29", hora_sol:"11:28", duracao:179, tipo:"Manutenção Programada", local:"Águas Claras", regiao:"Águas Claras", impacto:"Programado", rfo:"Troca de postes Neoenergia", status:"Concluído*", os:"—" },
+  { id:20, titulo:"Manutenção Programada - Mirante SF", data:"25/02/2026", hora_det:"14:28", hora_sol:"15:28", duracao:60, tipo:"Manutenção Programada", local:"Mirante São Francisco", regiao:"Águas Claras", impacto:"Programado", rfo:"Readequação de cabeamento", status:"Concluído", os:"—" },
+  { id:21, titulo:"Alerta Falha Retificadora", data:"27/02/2026", hora_det:"11:44", hora_sol:"12:27", duracao:43, tipo:"Falha de Infraestrutura", local:"CCR1036 GERENCIA", regiao:"Águas Claras", impacto:"N/I", rfo:"Cabo desconectado (manutenção AC)", status:"Resolvido", os:"—" }
+];
+
+// ===== CHARTS =====
+const COLORS = {
+  blue: '#2563a8', red: '#ef4444', orange: '#f59e0b',
+  green: '#10b981', purple: '#8b5cf6', pink: '#ec4899',
+  teal: '#14b8a6', gray: '#94a3b8', indigo: '#6366f1', lime: '#84cc16'
+};
+
+// Chart 1: Tipo
+const tipoCount = {};
+incidents.forEach(i => { tipoCount[i.tipo] = (tipoCount[i.tipo]||0)+1; });
+new Chart(document.getElementById('chartTipo'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(tipoCount),
+    datasets: [{ data: Object.values(tipoCount),
+      backgroundColor: [COLORS.red, COLORS.blue, COLORS.orange, COLORS.green, COLORS.purple, COLORS.pink, COLORS.teal, COLORS.gray],
+      borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } }, cutout: '60%' }
+});
+
+// Chart 2: Impacto por ocorrência
+const impactData = incidents.filter(i => typeof i.impacto === 'number' && i.impacto > 0);
+new Chart(document.getElementById('chartImpacto'), {
+  type: 'bar',
+  data: {
+    labels: impactData.map(i => i.titulo.replace(/^[^-]+ - /, '').substring(0,22)+'…'),
+    datasets: [{ label: 'Clientes', data: impactData.map(i => i.impacto),
+      backgroundColor: impactData.map(i => i.impacto >= 100 ? COLORS.red : i.impacto >= 20 ? COLORS.orange : COLORS.blue),
+      borderRadius: 6 }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { ticks: { font: { size: 10 } } } } }
+});
+
+// Chart 3: Região
+const regiaoCount = {};
+incidents.forEach(i => { if(i.regiao !== 'N/A') regiaoCount[i.regiao] = (regiaoCount[i.regiao]||0)+1; });
+new Chart(document.getElementById('chartRegiao'), {
+  type: 'pie',
+  data: {
+    labels: Object.keys(regiaoCount),
+    datasets: [{ data: Object.values(regiaoCount),
+      backgroundColor: [COLORS.blue, COLORS.orange, COLORS.green, COLORS.purple, COLORS.red],
+      borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } } }
+});
+
+// Chart 4: Tempo de resolução
+const tempoData = incidents.filter(i => i.duracao !== null).sort((a,b) => b.duracao - a.duracao).slice(0,12);
+new Chart(document.getElementById('chartTempo'), {
+  type: 'bar',
+  data: {
+    labels: tempoData.map(i => i.titulo.replace(/^[^-]+ - /, '').substring(0,20)+'…'),
+    datasets: [{ label: 'Horas', data: tempoData.map(i => (i.duracao/60).toFixed(1)),
+      backgroundColor: tempoData.map(i => i.duracao > 1000 ? COLORS.red : i.duracao > 400 ? COLORS.orange : COLORS.blue),
+      borderRadius: 6 }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Horas' } }, y: { ticks: { font: { size: 10 } } } } }
+});
+
+// Chart 5: Ocorrências por dia
+const diaCount = {};
+incidents.forEach(i => { diaCount[i.data] = (diaCount[i.data]||0)+1; });
+const dias = Object.keys(diaCount).sort((a,b) => {
+  const [da,ma,ya] = a.split('/'); const [db,mb,yb] = b.split('/');
+  return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+});
+new Chart(document.getElementById('chartDia'), {
+  type: 'bar',
+  data: {
+    labels: dias,
+    datasets: [{ label: 'Ocorrências', data: dias.map(d => diaCount[d]),
+      backgroundColor: dias.map(d => diaCount[d] >= 4 ? COLORS.red : diaCount[d] >= 2 ? COLORS.orange : COLORS.blue),
+      borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } } } }
+});
+
+// Chart 6: Status
+const statusCount = {};
+incidents.forEach(i => {
+  const s = i.status.replace('*','').trim();
+  const key = s === 'Resolvido' || s === 'Concluído' ? 'Resolvido/Concluído' :
+              s === 'Monitorado' ? 'Monitorado (Externo)' :
+              s === 'Parcial' ? 'Parcialmente Resolvido' : s;
+  statusCount[key] = (statusCount[key]||0)+1;
+});
+new Chart(document.getElementById('chartStatus'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(statusCount),
+    datasets: [{ data: Object.values(statusCount),
+      backgroundColor: [COLORS.green, COLORS.gray, COLORS.orange, COLORS.red],
+      borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } }, cutout: '55%' }
+});
+
+// Chart 7: RFO
+const rfoMap = {
+  'Rompimento físico externo': ['Poste pegou fogo','Caminhão rompeu o cabo','Cabo cortado no pé da alça','Rompimento de cabo (4 rompimentos)','Chuva atrasou reparo'],
+  'Vandalismo/Roubo': ['Roubo da subida lateral + corte de cabos'],
+  'Causa externa (terceiros)': ['Causa externa','Causa externa (Instagram)'],
+  'Manutenção programada': ['Manutenção programada','Troca de postes Neoenergia','Readequação de cabeamento'],
+  'Não identificado': ['Não informado'],
+  'Outros': ['Falta de energia na quadra','Manutenção emergencial','Queda de energia / ressincronização','Cabo desconectado (manutenção AC)']
+};
+const rfoCounts = {};
+Object.keys(rfoMap).forEach(k => rfoCounts[k] = 0);
+incidents.forEach(i => {
+  let found = false;
+  for(const [cat, vals] of Object.entries(rfoMap)) {
+    if(vals.some(v => i.rfo.includes(v.substring(0,10)))) { rfoCounts[cat]++; found=true; break; }
+  }
+  if(!found) rfoCounts['Outros']++;
+});
+new Chart(document.getElementById('chartRFO'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(rfoCounts),
+    datasets: [{ data: Object.values(rfoCounts),
+      backgroundColor: [COLORS.red, COLORS.purple, COLORS.gray, COLORS.blue, COLORS.orange, COLORS.teal],
+      borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 10 } } } } }
+});
+
+// Chart 8: Clientes por região
+const clientesRegiao = { 'Taguatinga': 329, 'Águas Claras': 116, 'Vicente Pires': 1 };
+new Chart(document.getElementById('chartClientesRegiao'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(clientesRegiao),
+    datasets: [{ label: 'Clientes impactados', data: Object.values(clientesRegiao),
+      backgroundColor: [COLORS.red, COLORS.orange, COLORS.blue],
+      borderRadius: 8 }]
+  },
+  options: { plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } } } }
+});
+
+// ===== TIMELINE =====
+const tlContainer = document.getElementById('timelineContainer');
+const tlColors = {
+  'Rompimento de Cabo': 'danger', 'Vandalismo / Roubo': 'danger',
+  'Corte de Cabo': 'danger', 'Falha de Sinal (LOS)': '',
+  'Falha de Sinal (OFF)': '', 'Manutenção Programada': 'resolved',
+  'Manutenção Emergencial': '', 'Falta de Energia': '',
+  'Instabilidade de Serviço Externo': 'resolved', 'Falha de Infraestrutura': ''
+};
+const badgeClass = {
+  'Rompimento de Cabo': 'badge-danger', 'Vandalismo / Roubo': 'badge-danger',
+  'Corte de Cabo': 'badge-danger', 'Falha de Sinal (LOS)': 'badge-warning',
+  'Falha de Sinal (OFF)': 'badge-warning', 'Manutenção Programada': 'badge-success',
+  'Manutenção Emergencial': 'badge-warning', 'Falta de Energia': 'badge-info',
+  'Instabilidade de Serviço Externo': 'badge-gray', 'Falha de Infraestrutura': 'badge-purple'
+};
+incidents.forEach(inc => {
+  const cls = tlColors[inc.tipo] || '';
+  const bCls = badgeClass[inc.tipo] || 'badge-gray';
+  const impStr = typeof inc.impacto === 'number' ? `${inc.impacto} cliente(s)` : inc.impacto;
+  const durStr = inc.duracao ? `${(inc.duracao/60).toFixed(1)}h` : 'N/I';
+  tlContainer.innerHTML += `
+    <div class="tl-item ${cls}">
+      <div class="tl-header">
+        <div class="tl-title">${inc.titulo}</div>
+        <div class="tl-time">${inc.data} · ${inc.hora_det}</div>
+      </div>
+      <div class="tl-body">
+        <strong>Região:</strong> ${inc.regiao} &nbsp;|&nbsp;
+        <strong>Impacto:</strong> ${impStr} &nbsp;|&nbsp;
+        <strong>Resolução:</strong> ${inc.hora_sol} &nbsp;|&nbsp;
+        <strong>Duração:</strong> ${durStr}
+        ${inc.rfo !== 'Não informado' ? `<br><strong>Causa (RFO):</strong> ${inc.rfo}` : ''}
+      </div>
+      <div class="tl-tags">
+        <span class="badge ${bCls}">${inc.tipo}</span>
+        <span class="badge badge-gray">OS: ${inc.os}</span>
+        <span class="badge ${inc.status.startsWith('Resolvido') || inc.status.startsWith('Concluído') ? 'badge-success' : inc.status === 'Monitorado' ? 'badge-gray' : 'badge-warning'}">${inc.status}</span>
+      </div>
+    </div>`;
+});
+
+// ===== TABLE =====
+function renderTable(filter) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const filtered = filter === 'all' ? incidents : incidents.filter(i => i.tipo === filter || i.tipo.includes(filter));
+  filtered.forEach(inc => {
+    const impStr = typeof inc.impacto === 'number' ? inc.impacto : inc.impacto;
+    const durStr = inc.duracao ? `${(inc.duracao/60).toFixed(1)}h` : '—';
+    const statusBadge = inc.status.startsWith('Resolvido') || inc.status.startsWith('Concluído') ? 'badge-success' :
+                        inc.status === 'Monitorado' ? 'badge-gray' : 'badge-warning';
+    const tipoBadge = badgeClass[inc.tipo] || 'badge-gray';
+    tbody.innerHTML += `<tr data-tipo="${inc.tipo}">
+      <td><strong>${inc.id}</strong></td>
+      <td><strong>${inc.data}</strong><br><span style="color:var(--text-muted)">${inc.hora_det}</span></td>
+      <td><strong>${inc.titulo}</strong><br><span style="color:var(--text-muted);font-size:0.75rem">${inc.local}</span></td>
+      <td>${inc.regiao}</td>
+      <td><span class="badge ${tipoBadge}">${inc.tipo}</span></td>
+      <td><strong>${impStr}</strong></td>
+      <td style="max-width:160px;font-size:0.78rem">${inc.rfo}</td>
+      <td style="font-size:0.78rem">${inc.hora_sol}</td>
+      <td><strong>${durStr}</strong></td>
+      <td><span class="badge ${statusBadge}">${inc.status}</span></td>
+    </tr>`;
+  });
+}
+renderTable('all');
+
+// Filter buttons
+document.getElementById('filterBar').querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable(btn.dataset.filter);
+  });
+});
+
+// Smooth scroll nav
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    const target = document.querySelector(a.getAttribute('href'));
+    if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Intersection observer for nav highlight
+const sections = document.querySelectorAll('section[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#'+entry.target.id);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
